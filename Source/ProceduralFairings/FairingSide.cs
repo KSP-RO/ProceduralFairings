@@ -6,6 +6,7 @@
 
 using ProceduralFairings;
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace Keramzit
@@ -841,6 +842,28 @@ namespace Keramzit
             }
 
             m.triangles = tri;
+        }
+
+        public IEnumerator SetOffset(Vector3 offset, float time = 0.3f)
+        {
+            var mf = part.FindModelComponent<MeshFilter>("model");
+            var lp = mf.transform.localPosition;
+            float elapsedTime = 0f;
+
+            while (elapsedTime < time)
+            {
+                mf.transform.localPosition = Vector3.Lerp(lp, offset, (elapsedTime / time));
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
+
+            mf.transform.localPosition = offset;
+        }
+
+        public void SetOffset(Vector3 offset)
+        {
+            var mf = part.FindModelComponent<MeshFilter>("model");
+            mf.transform.localPosition = offset;
         }
     }
 }

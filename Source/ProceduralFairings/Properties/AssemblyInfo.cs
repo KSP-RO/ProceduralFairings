@@ -26,7 +26,7 @@ using System.Runtime.InteropServices;
 //    • Revision
 
 [assembly: AssemblyVersion ("6.0.0.0")]
-[assembly: AssemblyFileVersion ("6.0.0.0")]
+[assembly: AssemblyFileVersion ("6.1.0.0")]
 
 //  The KSPAssembly attribute can be used to ensure that the plugin assemblies
 //  are loaded in the correct order.

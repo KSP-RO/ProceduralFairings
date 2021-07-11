@@ -6,6 +6,8 @@
 
 using ProceduralFairings;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Keramzit
@@ -46,7 +48,11 @@ namespace Keramzit
         [KSPField(isPersistant = true)] public Vector3 meshPos = Vector3.zero;
         [KSPField(isPersistant = true)] public Quaternion meshRot = Quaternion.identity;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Base Auto-shape", groupName = PFUtils.PAWGroup, groupDisplayName = PFUtils.PAWName)]
+        [KSPField(guiActiveEditor = true, guiName = "Shape Preset", groupName = PFUtils.PAWGroup, groupDisplayName = PFUtils.PAWName)]
+        [UI_ChooseOption(affectSymCounterparts = UI_Scene.Editor, scene = UI_Scene.Editor)]
+        public string shapePreset;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Base Auto-shape", groupName = PFUtils.PAWGroup)]
         [UI_Toggle(disabledText = "Off", enabledText = "On")]
         public bool baseAutoShape = true;
 
@@ -126,12 +132,13 @@ namespace Keramzit
         private bool DecouplerEnabled => part.FindModuleImplementing<ProceduralFairingDecoupler>() is ProceduralFairingDecoupler d && d.fairingStaged;
         public override string GetInfo() => "Attach to a procedural fairing base to reshape. Right-click it to set it's parameters.";
 
+        private static readonly Dictionary<string, FairingSideShapePreset> AllPresets = new Dictionary<string, FairingSideShapePreset>();
 
-        public void Start ()
+        public void Start()
         {
             if (part.mass != ApplyDecouplerMassModifier(fairingMass))
             {
-                Debug.LogError($"[PF] FairingSide Start(): Expected part mass {ApplyDecouplerMassModifier(fairingMass)} but discovered {part.mass}!");
+                Debug.LogWarning($"[PF] FairingSide Start(): Expected part mass {ApplyDecouplerMassModifier(fairingMass)} but discovered {part.mass}!");
                 part.mass = ApplyDecouplerMassModifier(fairingMass);
             }
         }
@@ -148,8 +155,14 @@ namespace Keramzit
             }
         }
 
-        public override void OnStart (StartState state)
+        public override void OnStart(StartState state)
         {
+            if (AllPresets.Count == 0)
+                LoadPresets(AllPresets);
+            shapePreset = AllPresets.Keys.FirstOrDefault() ?? "Invalid";
+            (Fields[nameof(shapePreset)].uiControlEditor as UI_ChooseOption).options = AllPresets.Keys.ToArray();
+            (Fields[nameof(shapePreset)].uiControlEditor as UI_ChooseOption).display = AllPresets.Keys.ToArray();
+
             dragCubeUpdater = new DragCubeUpdater(part);
             // If part is pulled from the picker (ie prefab), delay mesh rebuilding.
             if (HighLogic.LoadedSceneIsEditor && part.parent == null)
@@ -175,6 +188,9 @@ namespace Keramzit
 
         void SetUICallbacks()
         {
+            Fields[nameof(shapePreset)].uiControlEditor.onFieldChanged += OnShapePresetChanged;
+            Fields[nameof(shapePreset)].uiControlEditor.onSymmetryFieldChanged += OnShapePresetChanged;
+
             Fields[nameof(baseAutoShape)].uiControlEditor.onFieldChanged += OnChangeAutoShape;
             Fields[nameof(noseAutoShape)].uiControlEditor.onFieldChanged += OnChangeAutoShape;
 
@@ -218,6 +234,11 @@ namespace Keramzit
             }
         }
 
+        void OnShapePresetChanged(BaseField field, object obj)
+        {
+            if (AllPresets.TryGetValue(shapePreset, out var preset))
+                preset.Apply(this);
+        }
         void OnChangeDecouplerUI(BaseField field, object obj) => UpdateMassAndCostDisplay();
         void OnChangeAutoShape(BaseField field, object obj)
         {
@@ -249,7 +270,7 @@ namespace Keramzit
             }
         }
 
-        private void ResetBaseCurve(bool fromPrefab = false)
+        internal void ResetBaseCurve(bool fromPrefab = false)
         {
             baseCurveStartX = fromPrefab ? part.partInfo.partPrefab.FindModuleImplementing<ProceduralFairingSide>().baseConeShape.x : baseConeShape.x;
             baseCurveStartY = fromPrefab ? part.partInfo.partPrefab.FindModuleImplementing<ProceduralFairingSide>().baseConeShape.y : baseConeShape.y;
@@ -257,7 +278,7 @@ namespace Keramzit
             baseCurveEndY = fromPrefab ? part.partInfo.partPrefab.FindModuleImplementing<ProceduralFairingSide>().baseConeShape.w : baseConeShape.w;
         }
 
-        private void ResetNoseCurve(bool fromPrefab = false)
+        internal void ResetNoseCurve(bool fromPrefab = false)
         {
             noseCurveStartX = fromPrefab ? part.partInfo.partPrefab.FindModuleImplementing<ProceduralFairingSide>().noseConeShape.x : noseConeShape.x;
             noseCurveStartY = fromPrefab ? part.partInfo.partPrefab.FindModuleImplementing<ProceduralFairingSide>().noseConeShape.y : noseConeShape.y;
@@ -267,6 +288,7 @@ namespace Keramzit
 
         void SetUIFieldVisibility()
         {
+            Fields[nameof(shapePreset)].guiActiveEditor = AllPresets.Count > 1;
             Fields[nameof(baseCurveStartX)].guiActiveEditor  = !baseAutoShape;
             Fields[nameof(baseCurveStartY)].guiActiveEditor  = !baseAutoShape;
             Fields[nameof(baseCurveEndX)].guiActiveEditor    = !baseAutoShape;
@@ -279,6 +301,21 @@ namespace Keramzit
             Fields[nameof(noseCurveEndY)].guiActiveEditor    = !noseAutoShape;
             Fields[nameof(noseHeightRatio)].guiActiveEditor  = !noseAutoShape;
             Fields[nameof(noseConeSegments)].guiActiveEditor = !noseAutoShape;
+        }
+
+        private void LoadPresets(Dictionary<string, FairingSideShapePreset> presets)
+        {
+            presets.Clear();
+            if (GameDatabase.Instance.GetConfigNode("ProceduralFairings/PF_Settings/ProceduralFairingsSettings") is ConfigNode node)
+            {
+                foreach (var n in node.GetNodes("FairingSideShapePreset"))
+                {
+                    var p = new FairingSideShapePreset();
+                    ConfigNode.LoadObjectFromConfig(p, n);
+                    if (!presets.ContainsKey(p.name))
+                        presets.Add(p.name, p);
+                }
+            }
         }
 
         private void UpdateNodeSize()

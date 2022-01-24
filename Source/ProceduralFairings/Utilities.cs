@@ -32,8 +32,10 @@ namespace Keramzit
 
     public static class PFUtils
     {
-        public const string PAWName = "ProceduralFairings";
+        public const string PAWName = "Procedural Fairings";
         public const string PAWGroup = "ProceduralFairings";
+        public const string PAWShapeName = "Procedural Fairing Shape";
+        public const string PAWShapeGroup = "ProceduralFairingsShape";
         public static void setFieldRange(BaseField field, float minval, float maxval)
         {
             if (field.uiControlEditor is UI_FloatRange fr)
@@ -51,7 +53,7 @@ namespace Keramzit
 
         public static void UpdateAttachedPartPos(AttachNode node, Part part, Vector3 oldPosWorld)
         {
-            if (node is AttachNode && part is Part && 
+            if (node is AttachNode && part is Part &&
                 node.attachedPart is Part ap && ap.FindAttachNodeByPart(part) is AttachNode)
             {
                 if (HighLogic.LoadedSceneIsFlight)

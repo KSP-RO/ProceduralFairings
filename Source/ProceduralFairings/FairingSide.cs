@@ -127,7 +127,7 @@ namespace Keramzit
         private float ApplyDecouplerCostModifier(float baseCost) => DecouplerEnabled ? (baseCost * decouplerCostMult) + decouplerCostBase : baseCost;
         private float ApplyDecouplerMassModifier(float baseMass) => DecouplerEnabled ? (baseMass * decouplerMassMult) + decouplerMassBase : baseMass;
         private bool DecouplerEnabled => part.FindModuleImplementing<ProceduralFairingDecoupler>() is ProceduralFairingDecoupler d && d.fairingStaged;
-        public override string GetInfo() => "Attach to a procedural fairing base to reshape. Right-click it to set it's parameters.";
+        public override string GetInfo() => "Attach to a procedural fairing base to reshape. Right-click it to set its parameters.";
 
         private static readonly Dictionary<string, FairingSideShapePreset> AllPresets = new Dictionary<string, FairingSideShapePreset>();
 

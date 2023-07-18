@@ -48,6 +48,7 @@ namespace Keramzit
         [KSPField(isPersistant = true)] public float sideThickness = 0.05f;
         [KSPField(isPersistant = true)] public Vector3 meshPos = Vector3.zero;
         [KSPField(isPersistant = true)] public Quaternion meshRot = Quaternion.identity;
+        [KSPField(isPersistant = true)] public Vector3 hingeOffset = Vector3.zero;
 
         [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Density", groupName = PFUtils.PAWGroup, groupDisplayName = PFUtils.PAWName)]
         [UI_FloatRange(minValue = 0.01f, maxValue = 1.0f, stepIncrement = 0.01f)]
@@ -57,6 +58,7 @@ namespace Keramzit
         [KSPField] public float maxDensity = 1.0f;
         [KSPField] public float stepDensity = 0.01f;
 
+        public ModuleAnimateGeneric HingeAnimation;
 
         [KSPField(guiActiveEditor = true, guiName = "Mass", groupName = PFUtils.PAWGroup)]
         public string massDisplay;
@@ -120,20 +122,30 @@ namespace Keramzit
         [UI_Toggle(disabledText = "Unlocked", enabledText = "Locked")]
         public bool shapeLock;
 
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Petal Hinge", groupName = PFUtils.PAWGroup)]
+        [UI_Toggle(disabledText = "Disabled", enabledText = "Enabled", affectSymCounterparts = UI_Scene.All)]
+        public bool hingeEnabled = false;
+
         [KSPField] public float decouplerCostMult = 1;              // Mult to costPerTonne when decoupler is enabled
         [KSPField] public float decouplerCostBase = 0;              // Flat additional cost when decoupler is enabled
         [KSPField] public float decouplerMassMult = 1;              // Mass multiplier
         [KSPField] public float decouplerMassBase = 0.0001f;        // Flat additional mass (0.001 = 1kg)
-
+        [KSPField] public float hingeCostMult = 1;                  // Mult to costPerTonne when hinge is enabled
+        [KSPField] public float hingeCostBase = 0;                  // Flat additional cost when hinge is enabled
+        [KSPField] public float hingeMassMult = 1;                  // Mass multiplier
+        [KSPField] public float hingeMassBase = 0.0001f;            // Flat additional mass (0.001 = 1kg)
         public ModifierChangeWhen GetModuleCostChangeWhen() => ModifierChangeWhen.FIXED;
         public ModifierChangeWhen GetModuleMassChangeWhen() => ModifierChangeWhen.FIXED;
-        public float GetModuleCost(float defcost, ModifierStagingSituation sit) => ApplyDecouplerCostModifier(fairingMass * costPerTonne) - defcost;
-        public float GetModuleMass(float defmass, ModifierStagingSituation sit) => ApplyDecouplerMassModifier(fairingMass) - defmass;
-        private float ApplyDecouplerCostModifier(float baseCost) => DecouplerEnabled ? (baseCost * decouplerCostMult) + decouplerCostBase : baseCost;
-        private float ApplyDecouplerMassModifier(float baseMass) => DecouplerEnabled ? (baseMass * decouplerMassMult) + decouplerMassBase : baseMass;
+        public float GetModuleCost(float defcost, ModifierStagingSituation sit) => ApplyModuleCostModifier(fairingMass * costPerTonne) - defcost;
+        public float GetModuleMass(float defmass, ModifierStagingSituation sit) => ApplyModuleMassModifier(fairingMass) - defmass;
+        private float ApplyModuleCostModifier(float baseCost) => (baseCost * totalCostMult) + totalCostBase;
+        private float ApplyModuleMassModifier(float baseMass) => (baseMass * totalMassMult) + totalMassBase;
         private bool DecouplerEnabled => part.FindModuleImplementing<ProceduralFairingDecoupler>() is ProceduralFairingDecoupler d && d.fairingStaged;
         public override string GetInfo() => "Attach to a procedural fairing base to reshape. Right-click it to set its parameters.";
-
+        private float totalCostMult => 1 + (float)Math.Sqrt(Math.Pow(DecouplerEnabled ? decouplerCostMult : 0,2) + Math.Pow(hingeEnabled ? hingeCostMult : 0,2));
+        private float totalCostBase => (DecouplerEnabled ? decouplerCostBase : 0) + (hingeEnabled ? hingeCostBase : 0);
+        private float totalMassMult => (DecouplerEnabled ? decouplerMassMult : 1) * (hingeEnabled ? hingeMassMult : 1);
+        private float totalMassBase => (DecouplerEnabled ? decouplerMassBase : 0) + (hingeEnabled ? hingeMassBase : 0);
         private static readonly Dictionary<string, FairingSideShapePreset> AllPresets = new Dictionary<string, FairingSideShapePreset>();
 
         [KSPEvent(active = true, guiActiveEditor = true, groupName = PFUtils.PAWGroup, guiName = "Toggle Open/Closed")]
@@ -148,12 +160,26 @@ namespace Keramzit
             }
         }
 
+        [KSPEvent(active = true, guiActiveEditor = true, guiActive = true, groupName = PFUtils.PAWGroup, guiName = "Toggle Petals")]
+        public void TogglePetals()
+        {
+            HingeAnimation.Events["Toggle"].Invoke();
+
+            foreach (Part p in part.symmetryCounterparts)
+            {
+                if (p.FindModuleImplementing<ProceduralFairingSide>() is ProceduralFairingSide side)
+                {
+                    side.HingeAnimation.Events["Toggle"].Invoke();
+                }
+            }
+        }
+
         public void Start()
         {
-            if (part.mass != ApplyDecouplerMassModifier(fairingMass))
+            if (part.mass != ApplyModuleMassModifier(fairingMass))
             {
-                Debug.LogWarning($"[PF] FairingSide Start(): Expected part mass {ApplyDecouplerMassModifier(fairingMass)} but discovered {part.mass}!");
-                part.mass = ApplyDecouplerMassModifier(fairingMass);
+                Debug.LogWarning($"[PF] FairingSide Start(): Expected part mass {ApplyModuleMassModifier(fairingMass)} but discovered {part.mass}!");
+                part.mass = ApplyModuleMassModifier(fairingMass);
             }
         }
 
@@ -173,6 +199,8 @@ namespace Keramzit
 
         public override void OnStart(StartState state)
         {
+            HingeAnimation = part.FindModuleImplementing<ModuleAnimateGeneric>();
+          
             colliderPool = new ColliderPool(part.FindModelComponent<MeshFilter>("model"));
             if (AllPresets.Count == 0)
                 LoadPresets(AllPresets);
@@ -200,7 +228,17 @@ namespace Keramzit
 
             SetDensityField();
         }
+        public override void OnStartFinished(StartState state)
+        {
+            base.OnStartFinished(state);
 
+            HingeAnimation.Events["Toggle"].guiActiveEditor = false;
+            HingeAnimation.Events["Toggle"].guiActive = false;
+            HingeAnimation.Events["Toggle"].guiActiveUnfocused = false;
+            HingeAnimation.Events["Toggle"].guiActiveUncommand = false;
+            SetHingeToggles();
+
+        }
         private void SetDensityField()
         {
             var floatRange = Fields[nameof(density)].uiControlEditor as UI_FloatRange;
@@ -262,6 +300,9 @@ namespace Keramzit
                 decoupler.Fields[nameof(decoupler.fairingStaged)].uiControlEditor.onFieldChanged += OnChangeDecouplerUI;
                 decoupler.Fields[nameof(decoupler.fairingStaged)].uiControlEditor.onSymmetryFieldChanged += OnChangeDecouplerUI;
             }
+
+            Fields[nameof(hingeEnabled)].uiControlEditor.onFieldChanged += OnHingeEnabledChanged;
+            Fields[nameof(hingeEnabled)].uiControlEditor.onSymmetryFieldChanged += OnHingeEnabledChanged;
         }
 
         void OnShapePresetChanged(BaseField field, object obj) => ApplySelectedPreset();
@@ -348,7 +389,7 @@ namespace Keramzit
             int nsym = part.symmetryCounterparts.Count;
             string s = (nsym == 0) ? string.Empty : (nsym == 1) ? " (both)" : $" (all {nsym + 1})";
             float perPartCost = part.partInfo.cost + GetModuleCost(part.partInfo.cost, ModifierStagingSituation.CURRENT);
-            massDisplay = PFUtils.FormatMass(ApplyDecouplerMassModifier(fairingMass) * (nsym + 1)) + s;
+            massDisplay = PFUtils.FormatMass(ApplyModuleMassModifier(fairingMass) * (nsym + 1)) + s;
             costDisplay = $"{perPartCost * (nsym + 1):N0}{s}";
         }
 
@@ -473,7 +514,7 @@ namespace Keramzit
         {
             float volume = Convert.ToSingle(area * sideThickness);
             fairingMass = volume * density;
-            float totalMass = ApplyDecouplerMassModifier(fairingMass);
+            float totalMass = ApplyModuleMassModifier(fairingMass);
             part.breakingForce = totalMass * specificBreakingForce;
             part.breakingTorque = totalMass * specificBreakingTorque;
         }
@@ -496,7 +537,9 @@ namespace Keramzit
             Profiler.BeginSample("PF.FairingSide.RebuildMesh");
             Profiler.BeginSample("PF.FairingSide.RebuildMesh.BuildShape");
 
-            mf.transform.localPosition = meshPos;
+            OffsetHinge(mf);
+
+            mf.transform.localPosition = meshPos - hingeOffset;
             mf.transform.localRotation = meshRot;
 
             UpdateNodeSize();
@@ -923,12 +966,39 @@ namespace Keramzit
 
             Profiler.EndSample();
         }
+        public void OnHingeEnabledChanged(BaseField f, object obj)
+        {
+            UpdateMassAndCostDisplay();
+            SetHingeToggles();
+        }
 
+        private void SetHingeToggles()
+        {
+            if (HingeAnimation is null)
+                return;
+
+            Events["TogglePetals"].guiActiveEditor = hingeEnabled;
+            Events["TogglePetals"].guiActive = hingeEnabled;
+            Events["TogglePetals"].guiActiveUnfocused = hingeEnabled;
+            Events["TogglePetals"].guiActiveUncommand = hingeEnabled;
+
+            HingeAnimation.Fields["deployPercent"].guiActiveEditor = hingeEnabled;
+            HingeAnimation.Fields["deployPercent"].guiActive = (hingeEnabled && HighLogic.LoadedSceneIsEditor);
+            HingeAnimation.Fields["deployPercent"].guiActiveUnfocused = false;
+
+            if (!hingeEnabled && HighLogic.LoadedSceneIsFlight)
+                HingeAnimation.deployPercent = 0f;  //disabling still allows action groups to activate
+
+            MonoUtilities.RefreshPartContextWindow(part);
+
+        }
         public IEnumerator SetOffset(Vector3 offset, float time = 0.3f)
         {
             var mf = part.FindModelComponent<MeshFilter>("model");
             var lp = mf.transform.localPosition;
             float elapsedTime = 0f;
+
+            offset -= hingeOffset;
 
             while (elapsedTime < time)
             {
@@ -943,7 +1013,18 @@ namespace Keramzit
         public void SetOffset(Vector3 offset)
         {
             var mf = part.FindModelComponent<MeshFilter>("model");
-            mf.transform.localPosition = offset;
+            mf.transform.localPosition = offset - hingeOffset;
+        }
+
+        private void OffsetHinge(UnityEngine.MeshFilter mf)
+        {
+            var mh = part.FindModelTransform("Hinge");
+
+            if (mh != null)
+            {
+                hingeOffset = new Vector3(-1 * sideThickness, meshPos.y, 0f);
+                mh.localPosition = hingeOffset;
+            }
         }
     }
 

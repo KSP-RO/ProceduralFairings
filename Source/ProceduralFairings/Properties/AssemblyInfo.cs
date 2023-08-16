@@ -1,3 +1,4 @@
+#define CIBUILD_disabled
 using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -25,11 +26,14 @@ using System.Runtime.InteropServices;
 //    • Build Number
 //    • Revision
 
-[assembly: AssemblyVersion ("6.0.0.0")]
-[assembly: AssemblyFileVersion ("6.3.0.0")]
-
 //  The KSPAssembly attribute can be used to ensure that the plugin assemblies
 //  are loaded in the correct order.
 //  This attribute is not currently used but it is included here for completeness.
-
+[assembly: AssemblyVersion ("6.0.0.0")]
+#if CIBUILD
+[assembly: AssemblyFileVersion ("@MAJOR@.@MINOR@.@PATCH@.@BUILD@")]
+[assembly: KSPAssembly ("ProceduralFairings", @MAJOR@, @MINOR@)]
+#else
+[assembly: AssemblyFileVersion ("6.3.0.0")]
 [assembly: KSPAssembly ("ProceduralFairings", 6, 3)]
+#endif

@@ -94,6 +94,8 @@ namespace Keramzit
         [KSPField] public float decouplerMassMult = 1;              // Mass multiplier
         [KSPField] public float decouplerMassBase = 0;              // Flat additional mass (0.001 = 1kg)
 
+        [KSPField(isPersistant = true)] public float maxFairingSize = 0;                 // the "real" maximum width of the fairing, the bulge in the middle
+
         [KSPField(guiActiveEditor = true, guiName = "Mass", groupName = PFUtils.PAWGroup)]
         public string massDisplay;
 
@@ -146,7 +148,7 @@ namespace Keramzit
         public int InterstageNodeSize => Math.Max(1, TopNodeSize - 1);
         public int FairingBaseNodeSize => Math.Max(1, TopNodeSize - 1);
         public float CalcSideThickness() => Mode == BaseMode.Adapter ? Mathf.Min(sideThickness * Mathf.Max(baseSize, topSize), 0.25f * Mathf.Min(baseSize, topSize))
-                                            : Mode == BaseMode.Payload ? baseSize * Mathf.Min(sideThickness, 0.25f)
+                                            : Mode == BaseMode.Payload ? Mathf.Max(baseSize, maxFairingSize) * Mathf.Min(sideThickness, 0.25f)
                                             : 0;
 
         public ModifierChangeWhen GetModuleCostChangeWhen() => ModifierChangeWhen.FIXED;
@@ -533,16 +535,24 @@ namespace Keramzit
 
         public void UpdateShape(bool pushAttachments)
         {
+            PayloadScan scan = default;
             Profiler.BeginSample("PF.UpdateShape");
 
             Profiler.BeginSample("PF.UpdateShape.Setup");
             SetUIFieldLimits();
+            if (!HighLogic.LoadedSceneIsFlight)
+            {
+                Profiler.BeginSample("PF.RecalcShape.ScanPayload");
+                scan = ScanPayload();
+                Profiler.EndSample();
+                RecalcMaxSize(scan);
+            }
             UpdatePartProperties();
             UpdateNodes(pushAttachments);
             Profiler.EndSample();
             Profiler.BeginSample("PF.UpdateShape.RecalcShape");
             if (!HighLogic.LoadedSceneIsFlight)
-                RecalcShape();
+                RecalcShape(scan);
             Profiler.EndSample();
             ProceduralTools.DragCubeTool.UpdateDragCubes(part, stall: DefaultStall);
             UpdateFairingSideDragCubes();
@@ -1123,14 +1133,27 @@ namespace Keramzit
             }
         }
 
+        private void RecalcMaxSize(PayloadScan scan)
+        {
+            if (Mode != BaseMode.Payload)
+            {
+                maxFairingSize = baseSize;
+            }
+            else if (!autoShape)
+            {
+                maxFairingSize = manualMaxSize;
+            }
+            else
+            {
+                maxFairingSize = scan.profile.Max() * 2;
+            }
+        }
+
         public bool forcePartPosition = true;
-        public void RecalcShape ()
+        private void RecalcShape(PayloadScan scan)
         {
             if (Mode != BaseMode.Payload && Mode != BaseMode.Adapter)
                 return;
-            Profiler.BeginSample("PF.RecalcShape.ScanPayload");
-            var scan = ScanPayload();
-            Profiler.EndSample();
 
             //  Check for reversed bases (inline fairings).
 

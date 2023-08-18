@@ -21,7 +21,7 @@
     ],
     "install" : [
         {
-            "file"          : "ProceduralFairings",
+            "find"          : "ProceduralFairings",
             "install_to"    : "GameData"
         }
     ]

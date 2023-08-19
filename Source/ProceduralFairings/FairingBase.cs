@@ -1139,13 +1139,13 @@ namespace Keramzit
             {
                 maxFairingSize = baseSize;
             }
-            else if (!autoShape)
+            else if (autoShape && scan.profile.Count > 0)
             {
-                maxFairingSize = manualMaxSize;
+                maxFairingSize = scan.profile.Max() * 2;
             }
             else
             {
-                maxFairingSize = scan.profile.Max() * 2;
+                maxFairingSize = manualMaxSize;
             }
         }
 

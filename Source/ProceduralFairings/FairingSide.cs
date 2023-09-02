@@ -224,7 +224,7 @@ namespace Keramzit
                 ApplyShapeOnStart();
 
             if (HighLogic.LoadedSceneIsEditor)
-                part.AddOnMouseDown(OnMouseDown);
+                part.AddOnMouseDown(OnPartClick);
 
             SetUICallbacks();
             SetUIFieldVisibility();
@@ -359,7 +359,7 @@ namespace Keramzit
             Fields[nameof(noseHeightRatio)].guiActiveEditor = !usePreset;
         }
 
-        private void OnMouseDown(Part p)
+        private void OnPartClick(Part p)
         {
             if (Input.GetKey(KeyCode.LeftControl))
             {

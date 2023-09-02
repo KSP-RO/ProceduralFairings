@@ -6,6 +6,7 @@
 
 using ProceduralFairings;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -573,11 +574,24 @@ namespace Keramzit
         
         public void UpdateOpen()
         {
-            var offsetAmount = openFairing ? EditorOpenOffset : Vector3.zero;
-            foreach (var side in GetFairingSides(part))
+            Vector3 offsetAmount = openFairing ? EditorOpenOffset : Vector3.zero;
+            List<ProceduralFairingSide> sides = GetFairingSides(part);
+            foreach (var side in sides)
             {
                 StartCoroutine(side.SetOffset(side.meshPos + offsetAmount, openSpeed));
             }
+
+            if (sides.Count > 0)
+            {
+                StartCoroutine(WaitAndFireVesselModified(openSpeed));
+            }
+        }
+
+        private IEnumerator WaitAndFireVesselModified(float delaySeconds)
+        {
+            yield return new WaitForSeconds(delaySeconds);
+
+            GameEvents.onEditorShipModified.Fire(EditorLogic.fetch.ship);
         }
 
         public void UpdatePartProperties()

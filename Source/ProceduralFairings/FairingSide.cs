@@ -223,11 +223,15 @@ namespace Keramzit
             else
                 ApplyShapeOnStart();
 
+            if (HighLogic.LoadedSceneIsEditor)
+                part.AddOnMouseDown(OnPartClick);
+
             SetUICallbacks();
             SetUIFieldVisibility();
 
             SetDensityField();
         }
+
         public override void OnStartFinished(StartState state)
         {
             base.OnStartFinished(state);
@@ -239,6 +243,7 @@ namespace Keramzit
             SetHingeToggles();
 
         }
+
         private void SetDensityField()
         {
             var floatRange = Fields[nameof(density)].uiControlEditor as UI_FloatRange;
@@ -352,6 +357,14 @@ namespace Keramzit
             Fields[nameof(noseCurveEndY)].guiActiveEditor = !usePreset;
             Fields[nameof(noseConeSegments)].guiActiveEditor = !usePreset;
             Fields[nameof(noseHeightRatio)].guiActiveEditor = !usePreset;
+        }
+
+        private void OnPartClick(Part p)
+        {
+            if (Input.GetKey(KeyCode.LeftControl))
+            {
+                ToggleOpenClosed();
+            }
         }
 
         private static void LoadPresets(Dictionary<string, FairingSideShapePreset> presets)

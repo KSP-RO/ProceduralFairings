@@ -68,11 +68,12 @@
     <Reference Include="System" />
     <Reference Include="mscorlib" />
     <Reference Include="UnityEngine" />
-    <Reference Include="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
-    <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
-    <Reference Include="UnityEngine.IMGUIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
-    <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
-    <Reference Include="UnityEngine.TextRenderingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="UnityEngine.AudioModule" />
+    <Reference Include="UnityEngine.CoreModule" />
+    <Reference Include="UnityEngine.IMGUIModule" />
+    <Reference Include="UnityEngine.InputLegacyModule" />
+    <Reference Include="UnityEngine.PhysicsModule" />
+    <Reference Include="UnityEngine.TextRenderingModule" />
     <Reference Include="UnityEngine.UI" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

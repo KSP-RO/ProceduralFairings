@@ -736,7 +736,6 @@ namespace Keramzit
 
             if (DecouplerEnabled && TopNodePartPresent && autoDecoupleTopNode && !FairingPresent)
             {
-                RemoveTopPartJoints();
                 Decoupler.Decouple();
             }
             Fields[nameof(autoDecoupleTopNode)].guiActive = DecouplerEnabled && Mode == BaseMode.Adapter && TopNodePartPresent;
@@ -744,7 +743,6 @@ namespace Keramzit
 
         #region Node / Attached Part Utilities
 
-        public Part GetBottomPart() => (part.FindAttachNode("bottom") is AttachNode node) ? node.attachedPart : null;
         public Part GetTopPart() => (part.FindAttachNode(topNodeName) is AttachNode node) ? node.attachedPart : null;
         public bool TopNodePartPresent => GetTopPart() is Part;
         public bool FairingPresent
@@ -788,19 +786,6 @@ namespace Keramzit
             foreach (ConfigurableJoint joint in joints)
                 Destroy(joint);
             joints.Clear();
-        }
-
-        void RemoveTopPartJoints()
-        {
-            if (GetTopPart() is Part topPart && GetBottomPart() is Part bottomPart &&
-                topPart.gameObject.GetComponents<ConfigurableJoint>() is ConfigurableJoint[] components)
-            {
-                foreach (ConfigurableJoint configurableJoint in components)
-                {
-                    if (configurableJoint.connectedBody == bottomPart.Rigidbody)
-                        Destroy(configurableJoint);
-                }
-            }
         }
 
         private IEnumerator<YieldInstruction> CreateAutoStruts()

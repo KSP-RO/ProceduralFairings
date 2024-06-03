@@ -49,7 +49,6 @@
     <Compile Include="FairingSide.cs" />
     <Compile Include="NodeNumberTweaker.cs" />
     <Compile Include="PayloadScan.cs" />
-    <Compile Include="PFKMJoint.cs" />
     <Compile Include="ProcAdapter.cs" />
     <Compile Include="PFSettings.cs" />
     <Compile Include="UpgradePipeline.cs" />

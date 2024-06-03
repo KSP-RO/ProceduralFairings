@@ -126,6 +126,8 @@ namespace Keramzit
         [UI_Toggle(disabledText = "Disabled", enabledText = "Enabled", affectSymCounterparts = UI_Scene.All)]
         public bool hingeEnabled = false;
 
+        [KSPField] public float diameter;
+        [KSPField] public float height;
         [KSPField] public float decouplerCostMult = 1;              // Mult to costPerTonne when decoupler is enabled
         [KSPField] public float decouplerCostBase = 0;              // Flat additional cost when decoupler is enabled
         [KSPField] public float decouplerMassMult = 1;              // Mass multiplier
@@ -523,8 +525,10 @@ namespace Keramzit
             }
         }
 
-        private void UpdatePartParameters(double area)
+        private void UpdatePartParameters(double area, float topY)
         {
+            diameter = (Math.Max(baseRad, maxRad) + sideThickness) * 2f;
+            height = inlineHeight > 0 ? topY : topY + sideThickness;
             float volume = Convert.ToSingle(area * sideThickness);
             fairingMass = volume * density;
             float totalMass = ApplyModuleMassModifier(fairingMass);
@@ -633,7 +637,7 @@ namespace Keramzit
             }
             area *= Mathf.PI / numSideParts;
 
-            UpdatePartParameters(area);
+            UpdatePartParameters(area, topY);
             UpdateMassAndCostDisplay();
 
             float anglePerPart = 360f / numSideParts;

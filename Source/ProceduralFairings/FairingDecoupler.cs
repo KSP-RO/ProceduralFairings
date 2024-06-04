@@ -94,6 +94,10 @@ namespace Keramzit
             yield return new WaitForFixedUpdate();
             if (part.parent)
             {
+                if (part.parent.FindModuleImplementing<ProceduralFairingBase>() is ProceduralFairingBase fbase)
+                {
+                    fbase.OnFairingDecouple(part);
+                }
                 part.decouple();
                 ejectFx.audio.Play();
                 decoupled = true;

@@ -297,6 +297,12 @@ namespace Keramzit
 
         public void OnPartPack() => RemoveJoints();
 
+        public void OnPartUnpack()
+        {
+            if (HighLogic.LoadedSceneIsFlight && autoStrutSides)
+                StartCoroutine(CreateAutoStruts());
+        }
+
         public void OnShieldingDisabled(List<Part> shieldedParts) => RemoveJoints();
 
         public void OnShieldingEnabled(List<Part> shieldedParts)
@@ -304,6 +310,8 @@ namespace Keramzit
             if (HighLogic.LoadedSceneIsFlight && autoStrutSides)
                 StartCoroutine(CreateAutoStruts());
         }
+
+        public void OnFairingDecouple(Part fairingPart) => RemoveJoints();
 
         void OnPartAttach(GameEvents.HostTargetAction<Part, Part> action)
         {
@@ -335,8 +343,6 @@ namespace Keramzit
         {
             if (vessel == v && !part.packed && Mode == BaseMode.Adapter)
             {
-                if (GetTopPart() == null)
-                    RemoveJoints();
                 StartCoroutine(HandleAutomaticDecoupling());
             }
         }
@@ -760,7 +766,6 @@ namespace Keramzit
                 return false;
             }
         }
-        private Part FindTopBasePart() => Mode == BaseMode.Adapter ? GetTopPart() : null;
         private bool HasTopOrSideNode() => HasNodeComponent<ProceduralFairingSide>(part.FindAttachNodes("connect")) is AttachNode;
 
         void SetNodeVisibility(AttachNode node, bool show) => node.position.x = show ? 0 : 10000;
@@ -797,21 +802,20 @@ namespace Keramzit
             if (part.GetComponent<KzNodeNumberTweaker>() is KzNodeNumberTweaker nnt &&
                 part.FindAttachNodes("connect") is AttachNode[] attached)
             {
-                Part topBasePart = FindTopBasePart();
                 for (int i = 0; i < nnt.numNodes; ++i)
                 {
                     if (attached[i].attachedPart is Part p && p.Rigidbody &&
-                        attached[i > 0 ? i - 1 : nnt.numNodes - 1].attachedPart is Part pp)
+                        attached[i > 0 ? i - 1 : nnt.numNodes - 1].attachedPart is Part pp &&
+                        p.FindModuleImplementing<ProceduralFairingSide>() is ProceduralFairingSide pfs)
                     {
-                        AddStrut(p, pp);
-                        if (topBasePart != null)
-                            AddStrut(p, topBasePart);
+                        Vector3 offsetToFairingTop = pfs.height * Vector3.up + pfs.meshPos;
+                        AddStrut(p, pp, offsetToFairingTop);
                     }
                 }
             }
         }
 
-        private ConfigurableJoint AddStrut(Part p, Part pp)
+        private ConfigurableJoint AddStrut(Part p, Part pp, Vector3 anchorOffset)
         {
             if (p && p != pp && p.Rigidbody != pp.Rigidbody && pp.Rigidbody is Rigidbody rb &&
                 p.gameObject.AddComponent<ConfigurableJoint>() is ConfigurableJoint joint)
@@ -827,6 +831,7 @@ namespace Keramzit
                 joint.breakForce = p.breakingForce;
                 joint.breakTorque = p.breakingTorque;
                 joint.connectedBody = rb;
+                joint.anchor = anchorOffset;
 
                 joints.Add(joint);
                 return joint;

@@ -820,6 +820,8 @@ namespace Keramzit
             if (p && p != pp && p.Rigidbody != pp.Rigidbody && pp.Rigidbody is Rigidbody rb &&
                 p.gameObject.AddComponent<ConfigurableJoint>() is ConfigurableJoint joint)
             {
+                int sizeFactor = (BottomNodeSize + 1) * 2;   // Follow the stock PartJoint logic
+
                 joint.xMotion = ConfigurableJointMotion.Locked;
                 joint.yMotion = ConfigurableJointMotion.Locked;
                 joint.zMotion = ConfigurableJointMotion.Locked;
@@ -828,8 +830,8 @@ namespace Keramzit
                 joint.angularZMotion = ConfigurableJointMotion.Locked;
                 joint.projectionDistance = 0.1f;
                 joint.projectionAngle = 5;
-                joint.breakForce = p.breakingForce;
-                joint.breakTorque = p.breakingTorque;
+                joint.breakForce = sizeFactor * p.breakingForce * PhysicsGlobals.JointBreakForceFactor;
+                joint.breakTorque = sizeFactor * p.breakingTorque * PhysicsGlobals.JointBreakTorqueFactor;
                 joint.connectedBody = rb;
                 joint.anchor = anchorOffset;
 

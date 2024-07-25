@@ -195,8 +195,6 @@ namespace Keramzit
                 ReadBaseCurveFromVec4(false);
                 ReadNoseCurveFromVec4(false);
             }
-
-            SetDensityField();
         }
 
         public override void OnStart(StartState state)
@@ -247,6 +245,8 @@ namespace Keramzit
 
         private void SetDensityField()
         {
+            if (!HighLogic.LoadedSceneIsEditor) return;
+
             var floatRange = Fields[nameof(density)].uiControlEditor as UI_FloatRange;
             floatRange.minValue = minDensity;
             floatRange.maxValue = maxDensity;
@@ -265,6 +265,8 @@ namespace Keramzit
 
         void SetUICallbacks()
         {
+            if (!HighLogic.LoadedSceneIsEditor) return;
+
             Fields[nameof(usePreset)].uiControlEditor.onFieldChanged += OnUsePresetToggled;
             Fields[nameof(usePreset)].uiControlEditor.onSymmetryFieldChanged += OnUsePresetToggled;
 
@@ -344,6 +346,8 @@ namespace Keramzit
 
         void SetUIFieldVisibility()
         {
+            if (!HighLogic.LoadedSceneIsEditor) return;
+
             Fields[nameof(shapePreset)].guiActiveEditor = AllPresets.Count > 0 && usePreset;
 
             Fields[nameof(baseCurveStartX)].guiActiveEditor = !usePreset;

@@ -43,19 +43,7 @@ namespace Keramzit
         {
             base.OnStart(state);
 
-            (Fields[nameof(radius)].uiControlEditor as UI_FloatEdit).incrementLarge = radiusStepLarge;
-            (Fields[nameof(radius)].uiControlEditor as UI_FloatEdit).incrementSmall = radiusStepSmall;
-            Fields[nameof(radius)].guiActiveEditor = shouldResizeNodes;
-            Fields[nameof(radius)].uiControlEditor.onFieldChanged += OnRadiusChanged;
-            Fields[nameof(radius)].uiControlEditor.onSymmetryFieldChanged += OnRadiusChanged;
-
-            //  Change the GUI text if there are no fairing attachment nodes.
-            if (part.FindAttachNodes("connect") == null)
-                Fields[nameof(uiNumNodes)].guiName = "Side Nodes";
-
-            (Fields[nameof(uiNumNodes)].uiControlEditor as UI_FloatRange).maxValue = maxNumber;
-            Fields[nameof(uiNumNodes)].uiControlEditor.onFieldChanged += OnNumNodesChanged;
-            Fields[nameof(uiNumNodes)].uiControlEditor.onSymmetryFieldChanged += OnNumNodesChanged;
+            SetupUI();
 
             uiNumNodes = numNodes;
             numNodesBefore = numNodes;
@@ -99,6 +87,28 @@ namespace Keramzit
 
                 if (Convert.ToInt32(uiNumNodes) != numNodesBefore)
                     OnNumNodesChanged(Fields[nameof(uiNumNodes)], numNodesBefore);
+            }
+        }
+
+        private void SetupUI()
+        {
+            //  Change the GUI text if there are no fairing attachment nodes.
+            if (part.FindAttachNodes("connect") == null)
+                Fields[nameof(uiNumNodes)].guiName = "Side Nodes";
+
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                Fields[nameof(radius)].uiControlEditor.onFieldChanged += OnRadiusChanged;
+                Fields[nameof(radius)].uiControlEditor.onSymmetryFieldChanged += OnRadiusChanged;
+
+                Fields[nameof(uiNumNodes)].uiControlEditor.onFieldChanged += OnNumNodesChanged;
+                Fields[nameof(uiNumNodes)].uiControlEditor.onSymmetryFieldChanged += OnNumNodesChanged;
+
+                (Fields[nameof(radius)].uiControlEditor as UI_FloatEdit).incrementLarge = radiusStepLarge;
+                (Fields[nameof(radius)].uiControlEditor as UI_FloatEdit).incrementSmall = radiusStepSmall;
+                Fields[nameof(radius)].guiActiveEditor = shouldResizeNodes;
+
+                (Fields[nameof(uiNumNodes)].uiControlEditor as UI_FloatRange).maxValue = maxNumber;
             }
         }
 

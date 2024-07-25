@@ -165,13 +165,13 @@ namespace Keramzit
         [KSPEvent(active = true, guiActiveEditor = true, guiActive = true, groupName = PFUtils.PAWGroup, guiName = "Toggle Petals")]
         public void TogglePetals()
         {
-            HingeAnimation.Events["Toggle"].Invoke();
+            HingeAnimation.Events[nameof(ModuleAnimateGeneric.Toggle)].Invoke();
 
             foreach (Part p in part.symmetryCounterparts)
             {
                 if (p.FindModuleImplementing<ProceduralFairingSide>() is ProceduralFairingSide side)
                 {
-                    side.HingeAnimation.Events["Toggle"].Invoke();
+                    side.HingeAnimation.Events[nameof(ModuleAnimateGeneric.Toggle)].Invoke();
                 }
             }
         }
@@ -238,12 +238,11 @@ namespace Keramzit
         {
             base.OnStartFinished(state);
 
-            HingeAnimation.Events["Toggle"].guiActiveEditor = false;
-            HingeAnimation.Events["Toggle"].guiActive = false;
-            HingeAnimation.Events["Toggle"].guiActiveUnfocused = false;
-            HingeAnimation.Events["Toggle"].guiActiveUncommand = false;
+            HingeAnimation.Events[nameof(ModuleAnimateGeneric.Toggle)].guiActiveEditor = false;
+            HingeAnimation.Events[nameof(ModuleAnimateGeneric.Toggle)].guiActive = false;
+            HingeAnimation.Events[nameof(ModuleAnimateGeneric.Toggle)].guiActiveUnfocused = false;
+            HingeAnimation.Events[nameof(ModuleAnimateGeneric.Toggle)].guiActiveUncommand = false;
             SetHingeToggles();
-
         }
 
         private void SetDensityField()
@@ -994,14 +993,14 @@ namespace Keramzit
             if (HingeAnimation is null)
                 return;
 
-            Events["TogglePetals"].guiActiveEditor = hingeEnabled;
-            Events["TogglePetals"].guiActive = hingeEnabled;
-            Events["TogglePetals"].guiActiveUnfocused = hingeEnabled;
-            Events["TogglePetals"].guiActiveUncommand = hingeEnabled;
+            Events[nameof(TogglePetals)].guiActiveEditor = hingeEnabled;
+            Events[nameof(TogglePetals)].guiActive = hingeEnabled;
+            Events[nameof(TogglePetals)].guiActiveUnfocused = hingeEnabled;
+            Events[nameof(TogglePetals)].guiActiveUncommand = hingeEnabled;
 
-            HingeAnimation.Fields["deployPercent"].guiActiveEditor = hingeEnabled;
-            HingeAnimation.Fields["deployPercent"].guiActive = (hingeEnabled && HighLogic.LoadedSceneIsEditor);
-            HingeAnimation.Fields["deployPercent"].guiActiveUnfocused = false;
+            HingeAnimation.Fields[nameof(ModuleAnimateGeneric.deployPercent)].guiActiveEditor = hingeEnabled;
+            HingeAnimation.Fields[nameof(ModuleAnimateGeneric.deployPercent)].guiActive = (hingeEnabled && HighLogic.LoadedSceneIsEditor);
+            HingeAnimation.Fields[nameof(ModuleAnimateGeneric.deployPercent)].guiActiveUnfocused = false;
 
             if (!hingeEnabled && HighLogic.LoadedSceneIsFlight)
                 HingeAnimation.deployPercent = 0f;  //disabling still allows action groups to activate

@@ -466,12 +466,12 @@ namespace Keramzit
         {
             if (Decoupler)
             {
-                Decoupler.Actions["DecoupleAction"].active = decouplerEnabled;
-                Decoupler.Events["Decouple"].active = decouplerEnabled;
-                Decoupler.Events["Decouple"].guiActive = decouplerEnabled;
-                Decoupler.Events["ToggleStaging"].active = decouplerEnabled;
-                Decoupler.Events["ToggleStaging"].guiActive = decouplerEnabled;
-                Decoupler.Events["ToggleStaging"].guiActiveEditor = decouplerEnabled;
+                Decoupler.Actions[nameof(ModuleDecouple.DecoupleAction)].active = decouplerEnabled;
+                Decoupler.Events[nameof(ModuleDecouple.Decouple)].active = decouplerEnabled;
+                Decoupler.Events[nameof(ModuleDecouple.Decouple)].guiActive = decouplerEnabled;
+                Decoupler.Events[nameof(ToggleStaging)].active = decouplerEnabled;
+                Decoupler.Events[nameof(ToggleStaging)].guiActive = decouplerEnabled;
+                Decoupler.Events[nameof(ToggleStaging)].guiActiveEditor = decouplerEnabled;
                 Fields[nameof(autoDecoupleTopNode)].guiActive = decouplerEnabled && Mode == BaseMode.Adapter;
                 Fields[nameof(autoDecoupleTopNode)].guiActiveEditor = decouplerEnabled && Mode == BaseMode.Adapter;
             }

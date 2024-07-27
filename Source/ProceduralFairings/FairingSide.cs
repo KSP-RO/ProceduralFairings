@@ -16,7 +16,9 @@ namespace Keramzit
 {
     public class ProceduralFairingSide : PartModule, IPartCostModifier, IPartMassModifier
     {
+        private static readonly Dictionary<string, FairingSideShapePreset> AllPresets = new Dictionary<string, FairingSideShapePreset>();
         internal ColliderPool colliderPool;
+
         [KSPField] public float minBaseConeAngle = 20;
         [KSPField] public float colliderShaveAngle = 5;
         [KSPField] public Vector4 baseConeShape = new Vector4(0, 0, 0, 0);
@@ -52,7 +54,7 @@ namespace Keramzit
 
         [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Density", groupName = PFUtils.PAWGroup, groupDisplayName = PFUtils.PAWName)]
         [UI_FloatRange(minValue = 0.01f, maxValue = 1.0f, stepIncrement = 0.01f)]
-        public float density = 0.2f;
+        public float density = -1f;
 
         [KSPField] public float minDensity = 0.01f;
         [KSPField] public float maxDensity = 1.0f;
@@ -136,6 +138,7 @@ namespace Keramzit
         [KSPField] public float hingeCostBase = 0;                  // Flat additional cost when hinge is enabled
         [KSPField] public float hingeMassMult = 1;                  // Mass multiplier
         [KSPField] public float hingeMassBase = 0.0001f;            // Flat additional mass (0.001 = 1kg)
+
         public ModifierChangeWhen GetModuleCostChangeWhen() => ModifierChangeWhen.FIXED;
         public ModifierChangeWhen GetModuleMassChangeWhen() => ModifierChangeWhen.FIXED;
         public float GetModuleCost(float defcost, ModifierStagingSituation sit) => ApplyModuleCostModifier(fairingMass * costPerTonne) - defcost;
@@ -148,7 +151,6 @@ namespace Keramzit
         private float totalCostBase => (DecouplerEnabled ? decouplerCostBase : 0) + (hingeEnabled ? hingeCostBase : 0);
         private float totalMassMult => (DecouplerEnabled ? decouplerMassMult : 1) * (hingeEnabled ? hingeMassMult : 1);
         private float totalMassBase => (DecouplerEnabled ? decouplerMassBase : 0) + (hingeEnabled ? hingeMassBase : 0);
-        private static readonly Dictionary<string, FairingSideShapePreset> AllPresets = new Dictionary<string, FairingSideShapePreset>();
 
         [KSPEvent(active = true, guiActiveEditor = true, groupName = PFUtils.PAWGroup, guiName = "Toggle Open/Closed")]
         public void ToggleOpenClosed()
@@ -199,6 +201,11 @@ namespace Keramzit
 
         public override void OnStart(StartState state)
         {
+            if (HighLogic.LoadedSceneIsEditor && density == -1f)
+            {
+                density = minDensity;
+            }
+
             HingeAnimation = part.FindModuleImplementing<ModuleAnimateGeneric>();
           
             colliderPool = new ColliderPool(part.FindModelComponent<MeshFilter>("model"));

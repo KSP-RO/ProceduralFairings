@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle ("ProceduralFairings")]
 [assembly: AssemblyDescription ("Procedural Fairings for KSP")]
-[assembly: AssemblyCopyright ("Copyright © 2016 - 2022, e-dog, rsparkyc, PhineasFreak, KSP-RO group")]
+[assembly: AssemblyCopyright ("Copyright © 2016 - 2025, e-dog, rsparkyc, PhineasFreak, KSP-RO group")]
 [assembly: AssemblyConfiguration ("Release")]
 [assembly: AssemblyProduct ("ProceduralFairings")]
 
@@ -34,6 +34,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion ("@MAJOR@.@MINOR@.@PATCH@.@BUILD@")]
 [assembly: KSPAssembly ("ProceduralFairings", @MAJOR@, @MINOR@)]
 #else
-[assembly: AssemblyFileVersion ("6.3.0.0")]
-[assembly: KSPAssembly ("ProceduralFairings", 6, 3)]
+[assembly: AssemblyFileVersion ("6.99.0.0")]
+[assembly: KSPAssembly ("ProceduralFairings", 6, 99)]
 #endif
+
+[assembly: KSPAssemblyDependency("ROUtils", 1, 1)]

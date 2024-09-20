@@ -39,7 +39,6 @@
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ProceduralTools\DragCubeTool.cs" />
     <Compile Include="FairingSideShapePreset.cs" />
     <Compile Include="ProceduralTools\KSPFieldTool.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -64,6 +63,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp" />
+    <Reference Include="ROUtils">
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="mscorlib" />
     <Reference Include="UnityEngine" />

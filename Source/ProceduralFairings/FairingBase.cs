@@ -12,13 +12,12 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Profiling;
+using ROUtils;
 
 namespace Keramzit
 {
     public class ProceduralFairingBase : PartModule, IPartCostModifier, IPartMassModifier
     {
-        protected static System.Random random;
-        protected int DefaultStall => HighLogic.LoadedSceneIsEditor && random != null ? random.Next(5) : 0;
         public const float MaxCylinderDimension = 50;
         protected const float verticalStep = 0.1f;
         public enum BaseMode { Payload, Adapter, Plate, Other }
@@ -151,6 +150,7 @@ namespace Keramzit
         public float CalcSideThickness() => Mode == BaseMode.Adapter ? Mathf.Min(sideThickness * Mathf.Max(baseSize, topSize), 0.25f * Mathf.Min(baseSize, topSize))
                                             : Mode == BaseMode.Payload ? Mathf.Max(baseSize, maxFairingSize) * Mathf.Min(sideThickness, 0.25f)
                                             : 0;
+        public string ShapeKey => $"PF-Base|{Mode}|{baseSize}|{part.name}|{part.variants?.GetCurrentVariantIndex()}";
 
         public ModifierChangeWhen GetModuleCostChangeWhen() => ModifierChangeWhen.FIXED;
         public ModifierChangeWhen GetModuleMassChangeWhen() => ModifierChangeWhen.FIXED;
@@ -173,7 +173,6 @@ namespace Keramzit
         public override void OnAwake()
         {
             base.OnAwake();
-            random ??= new System.Random();
 
             if (HighLogic.LoadedSceneIsEditor)
             {
@@ -182,7 +181,7 @@ namespace Keramzit
             }
         }
 
-        public override void OnStart (StartState state)
+        public override void OnStart(StartState state)
         {
             Decoupler = part.FindModuleImplementing<ModuleDecouple>();
             if (Decoupler)
@@ -200,7 +199,7 @@ namespace Keramzit
 
             if (!HighLogic.LoadedSceneIsEditor && !HighLogic.LoadedSceneIsFlight) return;
 
-            ProceduralTools.DragCubeTool.UpdateDragCubes(part, stall: DefaultStall);
+            DragCubeTool.UpdateDragCubes(part, ShapeKey);
             if (HighLogic.LoadedSceneIsEditor)
             {
                 ConfigureTechLimits();
@@ -561,7 +560,7 @@ namespace Keramzit
             if (!HighLogic.LoadedSceneIsFlight)
                 RecalcShape(scan);
             Profiler.EndSample();
-            ProceduralTools.DragCubeTool.UpdateDragCubes(part, stall: DefaultStall);
+            DragCubeTool.UpdateDragCubes(part, ShapeKey);
             UpdateFairingSideDragCubes();
 
             Profiler.EndSample();
@@ -575,7 +574,7 @@ namespace Keramzit
         public void UpdateFairingSideDragCubes()
         {
             if (GetFairingSides(part).FirstOrDefault() is ProceduralFairingSide p)
-                ProceduralTools.DragCubeTool.UpdateDragCubes(p.part, symmetry: true);
+                DragCubeTool.UpdateDragCubes(p.part, p.ShapeKey, updateSymCounterparts: true);
         }
         
         public void UpdateOpen()

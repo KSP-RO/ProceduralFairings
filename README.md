@@ -16,6 +16,7 @@ Extract the contents of the **ProceduralFairings** .zip file and then drop the P
 Dependencies:
 * ModuleManager
 * KSPCommunityFixes
+* ROUtils
 
 ### Usage
 

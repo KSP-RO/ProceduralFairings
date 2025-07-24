@@ -5,6 +5,7 @@
 //  ==================================================
 
 using ProceduralFairings;
+using ROUtils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -151,6 +152,7 @@ namespace Keramzit
         private float totalCostBase => (DecouplerEnabled ? decouplerCostBase : 0) + (hingeEnabled ? hingeCostBase : 0);
         private float totalMassMult => (DecouplerEnabled ? decouplerMassMult : 1) * (hingeEnabled ? hingeMassMult : 1);
         private float totalMassBase => (DecouplerEnabled ? decouplerMassBase : 0) + (hingeEnabled ? hingeMassBase : 0);
+        public string ShapeKey => usePreset ? $"PF-Side|{shapePreset}|{numSideParts}|{numSegs}|{baseRad}|{maxRad}|{cylStart}|{cylEnd}|{topRad}|{inlineHeight}|{sideThickness}" : null;
 
         [KSPEvent(active = true, guiActiveEditor = true, groupName = PFUtils.PAWGroup, guiName = "Toggle Open/Closed")]
         public void ToggleOpenClosed()
@@ -987,9 +989,10 @@ namespace Keramzit
             }
 
             m.triangles = tri;
-            if (updateDragCubes)
-                ProceduralTools.DragCubeTool.UpdateDragCubes(part);
             Profiler.EndSample();
+
+            if (updateDragCubes)
+                DragCubeTool.UpdateDragCubes(part, ShapeKey);
 
             Profiler.EndSample();
         }

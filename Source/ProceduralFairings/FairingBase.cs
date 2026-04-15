@@ -288,7 +288,7 @@ namespace Keramzit
 
         private void OnEditorShipModified(ShipConstruct ship)
         {
-            if (Mode == BaseMode.Payload)
+            if (Mode == BaseMode.Payload && autoShape)
                 needShapeUpdate = true;
             if (Mode == BaseMode.Adapter || Mode == BaseMode.Payload)
                 StartCoroutine(DisplayFairingOutline());
@@ -316,7 +316,7 @@ namespace Keramzit
         {
             // On loading any craft, the sideFairing knows its shape already.
             // Thus only need to do this when our attachment state will change.
-            needShapeUpdate = HighLogic.LoadedSceneIsEditor && Mode == BaseMode.Payload;
+            needShapeUpdate = HighLogic.LoadedSceneIsEditor && Mode == BaseMode.Payload && autoShape;
 
             if (action.host == part || action.target == part)
             {
@@ -327,7 +327,7 @@ namespace Keramzit
 
         void OnPartRemove(GameEvents.HostTargetAction<Part, Part> action)
         {
-            needShapeUpdate = HighLogic.LoadedSceneIsEditor && Mode == BaseMode.Payload;
+            needShapeUpdate = HighLogic.LoadedSceneIsEditor && Mode == BaseMode.Payload && autoShape;
             if (Mode == BaseMode.Adapter || Mode == BaseMode.Payload)
                 StartCoroutine(DisplayFairingOutline());
 

@@ -8,7 +8,6 @@
     "abstract"        : "Fairings that automatically reshape for any attached payload",
     "license"         : "CC-BY",
     "author"          : [ "Felger", "NathanKell", "Pap1723", "KSP-RO" ],
-    "release_status"  : "stable",
     "depends"       : [
         { "name"    : "ModuleManager" },
         { "name"    : "KSPCommunityFixes" },

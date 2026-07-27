@@ -567,7 +567,7 @@ namespace Keramzit
         }
 
         public List<ProceduralFairingSide> GetFairingSides(Part p) =>
-            p.FindAttachNodes("connect")
+            p.FindAttachNodes("connect")?
              .Where(x => x.attachedPart is Part sp && sp.GetComponent<ProceduralFairingSide>() is ProceduralFairingSide)
              .Select(y => y.attachedPart.GetComponent<ProceduralFairingSide>()).ToList();
 

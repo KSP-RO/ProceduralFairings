@@ -566,10 +566,11 @@ namespace Keramzit
             Profiler.EndSample();
         }
 
-        public List<ProceduralFairingSide> GetFairingSides(Part p) =>
-            p.FindAttachNodes("connect")
+        public ProceduralFairingSide[] GetFairingSides(Part p) =>
+            p.FindAttachNodes("connect")?
              .Where(x => x.attachedPart is Part sp && sp.GetComponent<ProceduralFairingSide>() is ProceduralFairingSide)
-             .Select(y => y.attachedPart.GetComponent<ProceduralFairingSide>()).ToList();
+             .Select(y => y.attachedPart.GetComponent<ProceduralFairingSide>())
+             .ToArray() ?? Array.Empty<ProceduralFairingSide>();
 
         public void UpdateFairingSideDragCubes()
         {
@@ -580,13 +581,13 @@ namespace Keramzit
         public void UpdateOpen()
         {
             Vector3 offsetAmount = openFairing ? EditorOpenOffset : Vector3.zero;
-            List<ProceduralFairingSide> sides = GetFairingSides(part);
+            ProceduralFairingSide[] sides = GetFairingSides(part);
             foreach (var side in sides)
             {
                 StartCoroutine(side.SetOffset(side.meshPos + offsetAmount, openSpeed));
             }
 
-            if (sides.Count > 0)
+            if (sides.Length > 0)
             {
                 StartCoroutine(WaitAndFireVesselModified(openSpeed));
             }

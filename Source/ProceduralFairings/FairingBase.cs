@@ -573,7 +573,7 @@ namespace Keramzit
 
         public void UpdateFairingSideDragCubes()
         {
-            if (GetFairingSides(part).FirstOrDefault() is ProceduralFairingSide p)
+            if (GetFairingSides(part)?.FirstOrDefault() is ProceduralFairingSide p)
                 DragCubeTool.UpdateDragCubes(p.part, p.ShapeKey, updateSymCounterparts: true);
         }
         
@@ -581,13 +581,14 @@ namespace Keramzit
         {
             Vector3 offsetAmount = openFairing ? EditorOpenOffset : Vector3.zero;
             List<ProceduralFairingSide> sides = GetFairingSides(part);
-            foreach (var side in sides)
-            {
-                StartCoroutine(side.SetOffset(side.meshPos + offsetAmount, openSpeed));
-            }
 
-            if (sides.Count > 0)
+            if (sides?.Count > 0)
             {
+                foreach (var side in sides)
+                {
+                    StartCoroutine(side.SetOffset(side.meshPos + offsetAmount, openSpeed));
+                }
+
                 StartCoroutine(WaitAndFireVesselModified(openSpeed));
             }
         }

@@ -569,11 +569,11 @@ namespace Keramzit
         public List<ProceduralFairingSide> GetFairingSides(Part p) =>
             p.FindAttachNodes("connect")?
              .Where(x => x.attachedPart is Part sp && sp.GetComponent<ProceduralFairingSide>() is ProceduralFairingSide)
-             .Select(y => y.attachedPart.GetComponent<ProceduralFairingSide>()).ToList();
+             .Select(y => y.attachedPart.GetComponent<ProceduralFairingSide>()).ToList() ?? new List<ProceduralFairingSide>();
 
         public void UpdateFairingSideDragCubes()
         {
-            if (GetFairingSides(part)?.FirstOrDefault() is ProceduralFairingSide p)
+            if (GetFairingSides(part).FirstOrDefault() is ProceduralFairingSide p)
                 DragCubeTool.UpdateDragCubes(p.part, p.ShapeKey, updateSymCounterparts: true);
         }
 
@@ -582,7 +582,7 @@ namespace Keramzit
             Vector3 offsetAmount = openFairing ? EditorOpenOffset : Vector3.zero;
             List<ProceduralFairingSide> sides = GetFairingSides(part);
 
-            if (sides?.Count > 0)
+            if (sides.Count > 0)
             {
                 foreach (var side in sides)
                 {

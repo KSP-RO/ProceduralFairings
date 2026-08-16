@@ -1104,14 +1104,14 @@ namespace Keramzit
                 return coll;
             if (pool.TryDequeue(out coll))
             {
-                coll.transform.SetParent(parent.transform);
-                coll.gameObject.SetActive(true);
+                coll.transform?.SetParent(parent.transform);
+                coll.gameObject?.SetActive(true);
                 return coll;
             }
             GameObject obj = new GameObject($"collider_{parent.name}_{numCreated}");
             coll = obj.AddComponent<BoxCollider>();
             ownedColliders.Add(coll);
-            coll.transform.SetParent(parent.transform);
+            coll.transform?.SetParent(parent.transform);
             numCreated++;
             return coll;
         }

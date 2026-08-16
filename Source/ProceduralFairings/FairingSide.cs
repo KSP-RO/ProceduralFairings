@@ -1121,23 +1121,23 @@ namespace Keramzit
             if (collider is BoxCollider && ownedColliders.Contains(collider))
                 cache.Enqueue(collider as BoxCollider);
             else
-                collider.gameObject.DestroyGameObject();
+                collider.gameObject?.DestroyGameObject();
         }
 
         internal void ReleaseCacheToPool()
         {
-            while (cache != null && cache.TryDequeue(out BoxCollider collider))
+            while (cache.TryDequeue(out BoxCollider collider))
             {
                 collider.gameObject?.SetActive(false);
                 collider.transform?.SetParent(null);
-                pool?.Enqueue(collider);
+                pool.Enqueue(collider);
             }
         }
 
         internal void Dispose()
         {
             ReleaseCacheToPool();
-            while (pool != null && pool.TryDequeue(out BoxCollider collider))
+            while (pool.TryDequeue(out BoxCollider collider))
                 collider.gameObject?.DestroyGameObject();
         }
     }

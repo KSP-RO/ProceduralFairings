@@ -1100,10 +1100,16 @@ namespace Keramzit
 
         internal BoxCollider Acquire()
         {
-            if (cache.TryDequeue(out BoxCollider coll))
-                return coll;
-            if (pool.TryDequeue(out coll))
+            BoxCollider coll;
+            while (cache.TryDequeue(out coll))
             {
+                if (coll != null)
+                    return coll;
+            }
+            while (pool.TryDequeue(out coll))
+            {
+                if (coll == null)
+                    continue;
                 coll.transform.SetParent(parent.transform);
                 coll.gameObject.SetActive(true);
                 return coll;
@@ -1128,6 +1134,10 @@ namespace Keramzit
         {
             while (cache.TryDequeue(out BoxCollider collider))
             {
+                //  Unity's operator == also reports destroyed objects as null. Pooled colliders
+                //  can be torn down by the engine before OnDestroy() gets to dispose the pool.
+                if (collider == null)
+                    continue;
                 collider.gameObject.SetActive(false);
                 collider.transform.SetParent(null);
                 pool.Enqueue(collider);
@@ -1138,7 +1148,8 @@ namespace Keramzit
         {
             ReleaseCacheToPool();
             while (pool.TryDequeue(out BoxCollider collider))
-                collider.gameObject.DestroyGameObject();
+                if (collider != null)
+                    collider.gameObject.DestroyGameObject();
         }
     }
 }

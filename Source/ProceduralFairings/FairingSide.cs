@@ -1124,8 +1124,8 @@ namespace Keramzit
 
         internal void Release(Collider collider)
         {
-            if (collider is BoxCollider && ownedColliders.Contains(collider))
-                cache.Enqueue(collider as BoxCollider);
+            if (collider is BoxCollider box && ownedColliders.Contains(box))
+                cache.Enqueue(box);
             else
                 collider.gameObject.DestroyGameObject();
         }

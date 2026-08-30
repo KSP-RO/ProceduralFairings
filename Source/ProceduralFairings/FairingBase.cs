@@ -148,7 +148,7 @@ namespace Keramzit
         public int InterstageNodeSize => Math.Max(1, TopNodeSize - 1);
         public int FairingBaseNodeSize => Math.Max(1, TopNodeSize - 1);
         public float CalcSideThickness() => Mode == BaseMode.Adapter ? Mathf.Min(sideThickness * Mathf.Max(baseSize, topSize), 0.25f * Mathf.Min(baseSize, topSize))
-                                            : Mode == BaseMode.Payload ? Mathf.Max(baseSize, maxFairingSize) * Mathf.Min(sideThickness, 0.25f)
+                                            : Mode == BaseMode.Payload ? Mathf.Min(Mathf.Max(baseSize, maxFairingSize) * Mathf.Min(sideThickness, 0.25f), 0.25f * baseSize)
                                             : 0;
         public string ShapeKey => $"PF-Base|{Mode}|{baseSize}|{part.name}|{part.variants?.GetCurrentVariantIndex()}";
 

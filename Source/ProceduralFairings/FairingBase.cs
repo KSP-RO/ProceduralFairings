@@ -123,6 +123,7 @@ namespace Keramzit
         protected float fairingBaseMass = 0;
 
         public bool needShapeUpdate = true;
+        private bool startFinished;
         private LineRenderer line;
         private TextMeshPro decouplerHint;
         private TextMeshPro nonDecouplerHint;
@@ -242,6 +243,7 @@ namespace Keramzit
                 ShowHideInterstageNodes();
             if (Mode == BaseMode.Adapter)
                 StartCoroutine(HandleAutomaticDecoupling());
+            startFinished = true;
         }
 
         public void OnDestroy()
@@ -269,8 +271,17 @@ namespace Keramzit
         #region Event Callbacks
         private void OnPartVariantApplied(Part p, PartVariant variant)
         {
-            if (p == part)
-                StartCoroutine(OnPartVariantAppliedCR());
+            if (p != part) return;
+
+            // ModulePartVariants.ApplyVariant() has just reset every attach node it knows about
+            // back to its prefab position. Put our nodes back immediately and without
+            // pushing attachments: the onEditorShipModified that follows the variant change arms
+            // needShapeUpdate, and the resulting UpdateShape(true) would treat the prefab position
+            // as the node's old position and move the attached parts.
+            if (startFinished)
+                UpdateNodes(false);
+
+            StartCoroutine(OnPartVariantAppliedCR());
         }
 
         private System.Collections.IEnumerator OnPartVariantAppliedCR()

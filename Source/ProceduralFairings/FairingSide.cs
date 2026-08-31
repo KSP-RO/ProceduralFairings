@@ -22,6 +22,8 @@ namespace Keramzit
 
         [KSPField] public float minBaseConeAngle = 20;
         [KSPField] public float colliderShaveAngle = 5;
+        [KSPField] public float colliderRowRadiusStep = 0.15f;
+        [KSPField] public int maxColliderRowSplits = 8;
         [KSPField] public Vector4 baseConeShape = new Vector4(0, 0, 0, 0);
         [KSPField] public Vector4 noseConeShape = new Vector4(0, 0, 0, 0);
 
@@ -473,6 +475,12 @@ namespace Keramzit
                     else
                         norm = shape[i + 1] - shape[i - 1];
                     norm.Set(norm.y, -norm.x, 0);
+                    //  The nose cone ends on the axis of symmetry, so its apex has no radial
+                    //  direction: the outward normal there points straight up. Rotating it out
+                    //  radially instead folds the topmost collider row back down over the nose
+                    //  and leaves the tip itself uncovered.
+                    if (i == shape.Length - 1 && Mathf.Approximately(shape[i].x, 0))
+                        norm.Set(0, 1, 0);
                     normals[i] = norm.normalized;
                 }
                 Profiler.EndSample();
@@ -494,21 +502,48 @@ namespace Keramzit
                     n.Normalize();
                     // n is normal to the normal-projected shape[i],aligned to x=forward
 
-                    // shape[i] is a list of points along a vertical slice
-                    // dirs[j] is a list of normals around a horizontal slice
-                    // Create faces/box colliders centered between shape[i],shape[i+1] of desired angular radius
-                    // cp is the centerpoint of the collider, positioned 1/10th of sideThickness inside the fairing outer edge.
-                    Vector3 cp = (pNext + p) / 2;
-                    cp -= (sideThickness * 0.1f) * n;
-                    float collWidth = cp.x * Mathf.PI * 2 / (numSideParts * numColliders);
-                    Vector3 size = new Vector3(collWidth, (pNext - p).magnitude, sideThickness * 0.1f);
-                    // Skip the collider if adjacent points are too close.
-                    if (size.y > 0.001)
-                        BuildColliderRow(p, cp, n, size, numColliders, startAngle, anglePerCollider);
+                    // Every box in a row shares one width, but the circumference the row covers
+                    // grows with its radius. A row spanning a large radius change leaves gaps at
+                    // its wide end and overruns into the neighbouring side at its narrow end, so
+                    // split it into rows that each stay close to a single radius.
+                    int rowSplits = CountColliderRowSplits(p.x, pNext.x);
+                    for (int k = 0; k < rowSplits; k++)
+                    {
+                        Vector3 rowStart = Vector3.Lerp(p, pNext, (float)k / rowSplits);
+                        Vector3 rowEnd = Vector3.Lerp(p, pNext, (float)(k + 1) / rowSplits);
+
+                        // shape[i] is a list of points along a vertical slice
+                        // dirs[j] is a list of normals around a horizontal slice
+                        // Create faces/box colliders centered between rowStart,rowEnd of desired angular radius
+                        // cp is the centerpoint of the collider, positioned 1/10th of sideThickness inside the fairing outer edge.
+                        Vector3 cp = (rowEnd + rowStart) / 2;
+                        cp -= (sideThickness * 0.1f) * n;
+                        // anglePerCollider already has colliderShaveAngle taken out of it. Sizing
+                        // the box off the unshaved 360/numSideParts instead made every box wider
+                        // than its slot and ate the gap that keeps the sides' colliders apart.
+                        float collWidth = cp.x * anglePerCollider * Mathf.Deg2Rad;
+                        Vector3 size = new Vector3(collWidth, (rowEnd - rowStart).magnitude, sideThickness * 0.1f);
+                        // Skip the collider if adjacent points are too close.
+                        if (size.y > 0.001)
+                            BuildColliderRow(rowStart, cp, n, size, numColliders, startAngle, anglePerCollider);
+                    }
                 }
                 Profiler.EndSample();
             }
             colliderPool.ReleaseCacheToPool();
+        }
+
+        //  How many box collider rows a segment of the shape has to be split into for the boxes
+        //  to keep up with the changing circumference. A row may grow by a fraction of its
+        //  radius, or by sideThickness where that is larger (towards the nose apex the radius
+        //  goes to zero, and a gap narrower than the wall itself is not worth another row).
+        private int CountColliderRowSplits(float r, float rNext)
+        {
+            float radiusSpan = Mathf.Abs(rNext - r);
+            float maxRadiusStep = Mathf.Max(Mathf.Min(r, rNext) * colliderRowRadiusStep, sideThickness);
+            if (maxRadiusStep <= 0 || radiusSpan <= maxRadiusStep)
+                return 1;
+            return Mathf.Min(Mathf.CeilToInt(radiusSpan / maxRadiusStep), maxColliderRowSplits);
         }
 
         private void BuildColliderRow(Vector3 p, Vector3 cp, Vector3 normal, Vector3 size, int numColliders, float startAngle, float anglePerCollider)

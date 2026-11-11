@@ -475,12 +475,6 @@ namespace Keramzit
                     else
                         norm = shape[i + 1] - shape[i - 1];
                     norm.Set(norm.y, -norm.x, 0);
-                    //  The nose cone ends on the axis of symmetry, so its apex has no radial
-                    //  direction: the outward normal there points straight up. Rotating it out
-                    //  radially instead folds the topmost collider row back down over the nose
-                    //  and leaves the tip itself uncovered.
-                    if (i == shape.Length - 1 && Mathf.Approximately(shape[i].x, 0))
-                        norm.Set(0, 1, 0);
                     normals[i] = norm.normalized;
                 }
                 Profiler.EndSample();
